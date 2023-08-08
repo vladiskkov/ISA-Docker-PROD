@@ -1,0 +1,215 @@
+{% extends "main/base.html" %}
+{% load i18n%}
+{% block title %}{% trans "Профіль" %}{% endblock %}
+{% block content %}
+{% load static %}
+{% csrf_token %}
+
+<h1 class="display-6">{% trans "Профіль" %}</h1>
+<hr>
+<div class="row">
+  <div class="col-md">
+    <img src="{% static 'images/profile.png' %}" width="150" class="img-fluid mx-auto d-block pb-2">
+  </div>
+  <div class="col-5">
+    <p>{% trans "Ім'я" %}: {{ user.first_name }}</p>
+    <p>{% trans "Прізвище" %}: {{ user.last_name }}</p>
+    <p>{% trans "Компанія" %}: {{ user.company }}</p>
+    <p>{% trans "Підрозділ" %}: {{ user.department }}</p>
+  </div>
+  <div class="col-5">
+    <p>{% trans "Посада" %}: {{ user.job_title }}</p>
+    <p>{% trans "Дата регистрації" %}: {{ user.date_joined }}</p>
+    <p>{% trans "Завершено тестувань" %}: {{ count_complete_exams }}</p>
+    <p>{% trans "Середній бал" %}: {{ score }}</p>
+  </div>
+</div>
+<hr>
+{% if messages %}
+<div class="message">
+{% for message in messages %}
+<div class="alert alert-{{ message.tags }} del-msg" role="alert">{{ message }}</div>
+{% endfor %}
+{% endif %}
+<div class="row">
+  <div class="col-auto">
+    <h1 class="display-6 fs-4 pb-3">{% trans "Результати" %}</h1>
+  </div>
+  <div class="col">
+    <button class="btn btn-outline-warning btn-sm rounded-pill shadow position-relative" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">
+      {% trans "Сповіщення" %}
+      {% if unread_notifications.count > 0 %}
+      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+        {{ unread_notifications.count }}
+        <span class="visually-hidden">unread messages</span>
+      </span>
+      {% endif %}
+    </button>
+    <div class="offcanvas offcanvas-end bg-light bg-gradient border border-warning rounded-start shadow p-2 bg-opacity-75" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
+      <div class="offcanvas-header">
+        <h5 id="offcanvasRightLabel">{% trans "Сповіщення" %}</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        <ul class="nav nav-tabs nav-fill" style="--bs-nav-link-color: #ffc107; --bs-nav-link-hover-color: #967100;" id="myTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active shadow" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">{% trans 'Нові' %}</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link shadow" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">{% trans 'Старі' %}</button>
+          </li>
+        </ul>
+        <div class="tab-content mt-2" id="myTabContent">
+          <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
+            {% for unread_notification in unread_notifications %}
+            <div class='alert alert-warning pt-3 shadow' style='height: 50%' role='alert'>
+              <p class="mb-0">{{unread_notification.message.message}} [{{unread_notification.exam.name}}]</p>
+              <hr class="my-2">
+              <p class="lead text-start mb-0 fw-lights" style="font-size: smaller;">{{ unread_notification.timestamp }}</p>
+            </div>
+            {% empty %}
+            <div class="text-center pt-3">
+              <p class="text-secondary">{% trans 'Список порожній...' %}</p>
+            </div>
+            {% endfor %}
+            {% if unread_notifications %}
+            <div class="d-grid gap-2">
+              <a class='btn btn-sm btn-outline-warning mb-4 shadow' href="{% url 'read_all_notifications' %}">{% trans "Прочитати все" %}</a>
+            </div>
+            {% endif %}
+          </div>
+          <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
+            {% for read_notification in read_notifications %}
+            <div class='alert alert-warning pt-3 shadow' style='height: 50%' role='alert'>
+              <p class="mb-0">{{read_notification.message.message}} [{{read_notification.exam.name}}]</p>
+              <hr class="my-2">
+              <p class="lead text-start mb-0 fw-lights" style="font-size: smaller;">{{ read_notification.timestamp }}</p>
+            </div>
+            {% empty %}
+            <div class="text-center pt-3">
+              <p class="text-secondary">{% trans 'Список порожній...' %}</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% for exam in exams %}
+{% if exam.retake is False %}
+  <div class="card text-center mb-4">
+  {% if exam.complete is True %}
+    <div class="card-header">
+      {% trans "Тестування завершено" %}
+    </div>
+    <div class="card-body">
+      <h5 class="card-title" id="{{ exam.pk }}">{{ exam.exam }}</h5>
+      <p class="card-text">{% trans "Складено на" %} <b>{{ exam.score }}% ({{ exam.correct_answer }}/{{ exam.count_of_question }})</b></p>
+      {% if exam.exam.pk not in retake_requests %}
+        <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+          {% trans "Запросити перездачу" %}
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+            <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+          </svg>
+        </button>
+      {% elif exam.exam.pk in retake_requests %}
+        <button type="button" class="btn btn-outline-warning" disabled>{% trans "Запит на перездачу надіслано" %}</button>
+      {% endif %}
+    </div>
+    {% else %}
+      <div class="card-header">
+        {% trans "Тестування не завершено" %}
+      </div>
+      <div class="card-body">
+        <h5 class="card-title" id="{{ exam.pk }}">{{ exam.exam }}</h5>
+        <span class="badge text-bg-warning">{% trans "Активно" %}</span>
+      </div>
+    {% endif %}
+    <div class="card-footer text-muted" id="message">
+      {{ exam.start_time}} - {{ exam.end_time }}
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            {% trans "Запросити перездачу тестування" %} - {{ exam.exam.name }}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button id="exam_request" onclick="location.href='{% url 'retake_exam_request' pk=exam.pk %}';" name="exam_request" class="btn btn-outline-warning">{% trans "Підтвердити" %}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% elif exam.retake == True %}
+  <div class="card text-center mb-4">
+  {% if exam.complete is True %}
+    <div class="card-header">
+      {% trans "Тестування завершено" %}
+    </div>
+    <div class="card-body" style="background-color: rgba(245, 245, 245, 1);">
+      <h5 class="card-title" id="{{ exam.pk }}">{{ exam.exam }}</h5>
+      <p class="card-text">{% trans "Складено на" %} <b>{{ exam.score }}% ({{ exam.correct_answer }}/{{ exam.count_of_question }})</b></p>
+      <span class="badge text-bg-warning">{% trans "Перескладений" %}</span>
+    </div>
+    {% else %}
+      <div class="card-header">
+        {% trans "Тестування не завершено" %}
+      </div>
+      <div class="card-body">
+        <h5 class="card-title" id="{{ exam.pk }}">{{ exam.exam }}</h5>
+      </div>
+    {% endif %}
+    <div class="card-footer text-muted" id="message">
+      {{ exam.start_time}} - {{ exam.end_time }}
+    </div>
+  </div>
+  {% endif %}
+  {% empty %}
+  <div class="text-center">
+    <p class="text-secondary">{% trans 'Список порожній...' %}</p>
+  </div>
+{% endfor %}
+<div>
+  {% if exams.has_other_pages %}
+  <hr>
+  <nav aria-label="Page navigation example">
+  <ul class="pagination" style="--bs-pagination-color: black; --bs-pagination-hover-color: #ffc107; --bs-pagination-focus-color: #ffc107; --bs-pagination-focus-box-shadow: 0 0 0 0.25rem #ffc107">
+    {% if exams.has_previous %}
+    <li class="page-item"><a class="page-link"  href="?page={{ exams.previous_page_number }}">{% trans "Попередня" %}</a></li>
+    {% endif %}
+    {% for i in exams.paginator.page_range %}
+    {% if exams.number == i %}
+        <li class="page-item"><a class="page-link">{{ i }}</a></li>
+    {% else %}
+        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+    {% endif %}
+    {% endfor %}
+    {% if exams.has_next %}
+    <li class="page-item"><a class="page-link" href="?page={{ exams.next_page_number }}">{% trans "Насупна" %}</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+</div>
+<script>
+    $(document).ready(function() {
+        // messages timeout for 10 sec
+        setTimeout(function() {
+            $('.message').fadeOut('slow');
+        }, 5000); // <-- time in milliseconds, 1000 =  1 sec
+
+        // delete message
+        $('.del-msg').live('click',function(){
+            $('.del-msg').parent().attr('style', 'display:none;');
+        })
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,2 @@
+2023/08/08 16:56:24 [error] 22#22: *2 connect() failed (113: No route to host) while connecting to upstream, client: 172.27.0.1, server: isa-prod.dtek.com, request: "GET /admin/main/aditionaluserinfo/ HTTP/1.1", upstream: "http://172.27.0.3:8000/admin/main/aditionaluserinfo/", host: "127.0.0.1"
+2023/08/08 16:56:33 [error] 24#24: *5 connect() failed (111: Connection refused) while connecting to upstream, client: 172.27.0.1, server: isa-prod.dtek.com, request: "GET /accounts/login HTTP/1.1", upstream: "http://172.27.0.3:8000/accounts/login", host: "127.0.0.1"

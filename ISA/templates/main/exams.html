@@ -1,0 +1,114 @@
+{% extends "main/base.html" %}
+{% load i18n%}
+{% block title %}{% trans "Перелік тестувань" %}{% endblock %}
+{% block content %}
+<h1 class="display-6">
+  {% trans "Тестування" %}
+  <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" class="bi bi-journal-check" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M10.854 6.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 8.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
+  <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2z"/>
+  <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1z"/>
+</svg>
+</h1>
+<hr>
+{% if messages %}
+<div class="message">
+{% for message in messages %}
+<div class="alert alert-{{ message.tags }} del-msg" role="alert">{{ message }}</div>
+{% endfor %}
+</div>
+{% endif %}
+{% for exam in exams %}
+<div class="card mb-4 shadow-sm">
+  <div class="card-body">
+    <h5 class="card-title">{{ exam.name }}</h5>
+    <p class="card-title">{{ exam.description }}</p>
+    {% if exam.pk not in complete_exams_ids %}
+    <a href="{% url 'exam_detail' pk=exam.pk %}" class="shadow btn btn-outline-warning">
+      {% trans "Перейти до тестування" %}
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+      </svg>
+    </a>
+    {% elif exam.pk in complete_exams_ids %}
+    {% if exam.pk not in retake_requests %}
+      {% for complete_exam in complete_exams %}
+      {% if complete_exam.exam_id == exam.pk %}
+      <!--<button id="exam_request" onclick="sendID({{ complete_exam.pk }})" name="exam_request" class="btn btn-outline-warning">{% trans "Запросити перездачу" %}-->
+        <button type="button" class="shadow btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+          {% trans "Запросити перездачу" %}
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+              <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+            </svg>
+        </button>
+        <!-- Modal -->
+        <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                {% trans "Запросити перездачу тестування" %} - {{ exam.name }}
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary shadow" data-bs-dismiss="modal">Close</button>
+                <button id="exam_request" onclick="location.href='{% url 'retake_exam_request' pk=complete_exam.pk %}';" name="exam_request" class="shadow btn btn-outline-warning">{% trans "Підтвердити" %}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </button>
+      {% endif %}
+    {% endfor %}
+    {% elif exam.pk in retake_requests %}
+      <button type="button" class="btn btn-outline-warning shadow" disabled>{% trans "Запит на перездачу надіслано" %}</button>
+    {% endif %}
+
+    {% endif %}
+  </div>
+  {% if exam.pk in complete_exams_ids %}
+  {% for complete_exam in complete_exams %}
+  {% if exam.pk == complete_exam.exam_id %}
+  <div class="card-footer text-muted">
+      {% trans "Тестування пройдено" %} - {% if complete_exam.status == 'passed' %}<span class="text-success">{% trans 'УСПІШНО' %}</span>{% elif complete_exam.status == 'not passed' %}<span class="text-danger">{% trans 'НЕ УСПІШНО' %}</span>{% endif %} {% trans "з результатом" %} {{ complete_exam.score }}%
+       ({{ complete_exam.correct_answer }}/{{ complete_exam.count_of_question }}).<br>
+       {% trans "Прохідний рівень складає" %} {{ exam.passing_score }} {% trans "з" %} {{ complete_exam.count_of_question }}
+       {% trans "правильних відповідей на питання (з розрахунку" %} {{ complete_exam.count_of_question }} = 100%)
+  </div>
+  {% endif %}
+  {% endfor %}
+    {% elif exam.pk in retake_exams_ids %}
+   <div class="card-footer text-muted">
+    {% trans "Перездача" %}
+   </div>
+   {% elif exam.pk in not_complete_exams_ids %}
+   <div class="card-footer text-muted">
+    {% trans "Активний" %}
+   </div>
+   {% else %}
+   <div class="card-footer text-muted">
+    {% trans "Новий" %}
+   </div>
+ {% endif %}
+</div>
+{% empty %}
+<div class="text-center">
+  <p class="text-secondary">{% trans 'Список порожній...' %}</p>
+</div>
+{% endfor %}
+<script>
+    $(document).ready(function() {
+        // messages timeout for 10 sec
+        setTimeout(function() {
+            $('.message').fadeOut('slow');
+        }, 5000); // <-- time in milliseconds, 1000 =  1 sec
+
+        // delete message
+        $('.del-msg').live('click',function(){
+            $('.del-msg').parent().attr('style', 'display:none;');
+        })
+    });
+</script>
+{% endblock %}

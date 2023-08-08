@@ -1,0 +1,61 @@
+version: '3'
+# хранилища
+volumes:
+    pgdata:
+        driver: local
+services:
+    nginx:
+        restart: always
+        image: nginx:debian:12-slim
+        #expose:
+        #  - 443
+        volumes:
+            - ./ISA/static:/srv/www/ISA/static
+            - ./ISA/logs:/srv/www/ISA/logs
+            - ./docker/nginx/:/etc/nginx/conf.d
+        depends_on:
+            - python
+        #network_mode: "host"
+        #extra_hosts:
+        #    - "python:127.0.0.1"
+        ports:
+            - 443:443
+    python:
+        restart: always
+        build:
+            context: .
+            dockerfile: docker/python/Dockerfile
+        volumes:
+            - ./ISA:/srv/www/ISA
+        #expose:
+        #  - 8000
+        #network_mode: "host"
+        env_file:
+            - ./config.env
+        #extra_hosts:
+        #    - "nginx:127.0.0.1"
+        #    - "postgres:127.0.0.1"
+        ports:
+            - 8000:8000
+        command: bash -c "python manage.py makemigrations && python manage.py migrate && export DJANGO_SUPERUSER_PASSWORD='Foo!1Bar@2' && python manage.py createsuperuser --no-input --username admin --email admin@admin.com && gunicorn -c gunicorn.py IS_EXAM.wsgi"
+        depends_on:
+            postgres:
+                condition: service_healthy
+        dns:
+            - 8.8.8.8
+    postgres:
+        image: postgres:14.7-alpine
+        ports:
+            - 5432:5432
+        environment:
+            POSTGRES_USER: isaexamuser
+            POSTGRES_PASSWORD: r43O!t7@H#
+            POSTGRES_DB: isaexam
+            PGDATA: /var/lib/postgresql/data
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready"]
+            interval: 10s
+            timeout: 5s
+            retries: 5

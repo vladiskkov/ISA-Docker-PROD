@@ -1,0 +1,40 @@
+{% extends "main/base.html" %}
+{% load i18n%}
+{% block title %}{% trans "Тестування" %}{% endblock %}
+{% block content %}
+<style>
+  .scrolled {
+
+  }
+</style>
+<h1 class="display-6 ">{{ exam.name }}</h1>
+<hr>
+<form method="post">
+{% csrf_token %}
+{% for question in questions %}
+<h2 class="display-6 fs-4 pt-4" style="font-weight: 385;">{{ forloop.counter }}. {{ question.question }}  {% if question.answer_count > 1 %}<label class="text fs-6">({% trans "Позначте всі правильні варіанти відповідей" %})</label>{% endif %}</h2>
+{% if question.answer_count > 1 %}
+{% for answer in question.random_answers_as_list %}
+<div class="form-check">
+  <input class="form-check-input" type="checkbox" id="answer_{{ question.pk }}" name="answer_{{ question.pk }}" value="{{ answer }}">
+    {{ answer }}
+  </label>
+</div>
+{% endfor %}
+{% elif question.answer_count == 1 %}
+{% for answer in question.random_answers_as_list_2 %}
+<div class="form-check">
+  <input class="form-check-input" type="radio" id="answer_{{ question.pk }}" name="answer_{{ question.pk }}" value="{{ answer }}" required>
+  <label class="form-check-label">
+    {{ answer }}
+  </label>
+</div>
+{% endfor %}
+{% endif %}
+{% endfor %}
+<hr>
+<div class="text-center pb-5">
+  <button type="submit" class="shadow btn btn-outline-warning" style="width: 100%">{% trans "Завершити" %}</button>
+</div>
+</form>
+{% endblock %}

@@ -1,0 +1,212 @@
+{% extends "main/base_admin.html" %}
+{% load i18n%}
+{% block title %}{% trans "Запити на перездачу" %}{% endblock %}
+{% block content %}
+<style>
+  .zoom:hover{
+     transform: scale(1.02);
+      box-shadow: 0 10px 20px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06);
+}
+</style>
+<div class="row">
+  <h1 class="display-6">{% trans "Запити на перездачу" %}
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+      </svg>
+  </h1>
+</div>
+<hr>
+{% if messages %}
+<div class="message">
+{% for message in messages %}
+<div class="alert alert-{{ message.tags }} del-msg" role="alert">{{ message }}</div>
+{% endfor %}
+</div>
+{% endif %}
+<div class="d-none d-md-block d-print-block">
+  <div class="row">
+    <div class="col-md-2 px-4">
+      {% trans 'Користувач' %}
+    </div>
+    <div class="col-md-2 px-4">
+      {% trans 'Тестування' %}
+    </div>
+    <div class="col-md-2">
+      {% trans 'Статус' %}
+    </div>
+    <div class="col-md-2 px-0">
+      {% trans 'Результат' %}
+    </div>
+    <div class="col-md-2 px-0">
+      {% trans 'Оцінка' %}
+    </div>
+    <div class="col-md-1 px-0">
+      {% trans 'Перескладений' %}
+    </div>
+  </div>
+</div>
+{% for request in exams_requests %}
+<a class="text-decoration-none text-dark" data-bs-toggle="modal" data-bs-target="#staticBackdrop1{{ request.pk }}">
+<div class="card shadow-sm my-3
+{% if request.status == 'approve' %}
+bg-success bg-opacity-25
+{% elif request.status == 'deny' %}
+bg-danger bg-opacity-25
+{% else %}
+zoom
+{% endif %}
+"
+>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-2 form-horizontal">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Користувач:' %}
+          </div>
+          <div class="col-auto">
+            {{ request.username }}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Тестування:' %}
+          </div>
+          <div class="col-auto">
+            {{ request.user_exam.exam }}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Статус:' %}
+          </div>
+          <div class="col-auto">
+            <span class="badge text-bg-success">{% trans 'Завершений' %}</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Результат:' %}
+          </div>
+          <div class="col-auto">
+          {% if request.user_exam.status == 'passed' %}
+            <span class="badge text-bg-success">{% trans 'Успішно' %}</span>
+          {% elif request.user_exam.status == 'not passed' %}
+            <span class="badge text-bg-danger">{% trans 'Не успішно' %}</span>
+          {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Оцінка:' %}
+          </div>
+          <div class="col-auto">
+            {{ request.user_exam.score }}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-1">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Перездача:' %}
+          </div>
+          <div class="col-auto">
+            {% if request.user_exam.retake %}
+            <span class="badge text-bg-dark">{% trans "Так" %}</span>
+            {% else %}
+            <span class="badge text-bg-warning">{% trans "Ні" %}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</a>
+<div class="modal fade" id="staticBackdrop1{{ request.pk }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdrop1Label" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="staticBackdrop1Label">{{ request.username }} - {{ request.user_exam.exam }}</h5>
+        <span class="badge mx-3
+        {% if request.status == 'approve' %}
+        text-bg-success">{% trans 'Підтверджено' %}
+        {% elif request.status == 'deny' %}
+        text-bg-danger">{% trans 'Відхилено' %}
+        {% else %}
+        text-bg-warning">{% trans 'Активно' %}
+        {% endif %}
+        </span>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>{% trans 'Користувач:' %} {{ request.username }}</p>
+        <p>{% trans 'Тестування:' %} {{ request.user_exam.exam }} </p>
+        <p>{% trans 'Статус:' %} {% trans 'Завершений' %}</p>
+        <p>{% trans 'Результат:' %} {% if request.user_exam.status == 'passed' %}{% trans 'Успішно' %}{% elif request.user_exam.status == 'not passed' %}{% trans 'Не успішно' %}{% endif %}</p>
+        <p>{% trans 'Оцінка:' %} {% if request.user_exam.score != None %}{{ request.user_exam.score }} ({{ request.user_exam.correct_answer }}/{{ request.user_exam.count_of_question }}) {% else %} -  {% endif %}</p>
+        <p>{% trans 'Перездача' %}: {% if request.user_exam.retake %}{% trans "Так" %}{% else %}{% trans "Ні" %}{% endif %}</p>
+        <p>{% trans 'Початок' %}: {{ request.user_exam.start_time }}</p>
+        <p>{% trans 'Закінчення' %}: {{ request.user_exam.end_time }}</p>
+        <p>{% trans 'Запит відправлено' %}: {{ request.date }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary shadow" data-bs-dismiss="modal">{% trans 'Закрити' %}</button>
+        {% if request.status == 'new' %}
+        <button onclick="location.href='{% url 'retake_exam_response' request_pk=request.pk user_exam_pk=request.user_exam.pk action='approve' %}';" name="approve" class="btn btn-outline-warning">{% trans "Підтвердити" %}</button>
+        <button onclick="location.href='{% url 'retake_exam_response' request_pk=request.pk user_exam_pk=request.user_exam.pk action='deny' %}';" name="deny" class="btn btn-outline-danger">{% trans "Відхилити" %}</button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% empty %}
+<div class="text-center">
+  <p class="text-secondary">{% trans 'Список порожній...' %}</p>
+</div>
+{% endfor %}
+<div>
+  {% if exams_requests.has_other_pages %}
+  <hr>
+  <nav aria-label="Page navigation example">
+  <ul class="pagination" style="--bs-pagination-color: black; --bs-pagination-hover-color: #ffc107; --bs-pagination-focus-color: #ffc107; --bs-pagination-focus-box-shadow: 0 0 0 0.25rem #ffc107">
+    {% if exams_requests.has_previous %}
+    <li class="page-item"><a class="page-link"  href="?page={{ exams_requests.previous_page_number }}">{% trans "Попередня" %}</a></li>
+    {% endif %}
+    {% for i in exams_requests.paginator.page_range %}
+    {% if exams_requests.number == i %}
+        <li class="page-item"><a class="page-link">{{ i }}</a></li>
+    {% else %}
+        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+    {% endif %}
+    {% endfor %}
+    {% if exams_requests.has_next %}
+    <li class="page-item"><a class="page-link" href="?page={{ exams_requests.next_page_number }}">{% trans "Насупна" %}</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+</div>
+<script>
+    $(document).ready(function() {
+        // messages timeout for 10 sec
+        setTimeout(function() {
+            $('.message').fadeOut('slow');
+        }, 5000); // <-- time in milliseconds, 1000 =  1 sec
+
+        // delete message
+        $('.del-msg').live('click',function(){
+            $('.del-msg').parent().attr('style', 'display:none;');
+        })
+    });
+</script>
+{% endblock %}

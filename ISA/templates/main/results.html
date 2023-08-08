@@ -1,0 +1,375 @@
+{% extends "main/base_admin.html" %}
+{% load i18n%}
+{% block title %}{% trans "Результати" %}{% endblock %}
+{% load static %}
+{% block content %}
+{% csrf_token %}
+<style>
+  .card:hover{
+     transform: scale(1.02);
+      box-shadow: 0 10px 20px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06);
+}
+</style>
+<h1 class="display-6">{% trans "Результати" %}
+  <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" class="bi bi-database" viewBox="0 0 16 16">
+    <path d="M4.318 2.687C5.234 2.271 6.536 2 8 2s2.766.27 3.682.687C12.644 3.125 13 3.627 13 4c0 .374-.356.875-1.318 1.313C10.766 5.729 9.464 6 8 6s-2.766-.27-3.682-.687C3.356 4.875 3 4.373 3 4c0-.374.356-.875 1.318-1.313ZM13 5.698V7c0 .374-.356.875-1.318 1.313C10.766 8.729 9.464 9 8 9s-2.766-.27-3.682-.687C3.356 7.875 3 7.373 3 7V5.698c.271.202.58.378.904.525C4.978 6.711 6.427 7 8 7s3.022-.289 4.096-.777A4.92 4.92 0 0 0 13 5.698ZM14 4c0-1.007-.875-1.755-1.904-2.223C11.022 1.289 9.573 1 8 1s-3.022.289-4.096.777C2.875 2.245 2 2.993 2 4v9c0 1.007.875 1.755 1.904 2.223C4.978 15.71 6.427 16 8 16s3.022-.289 4.096-.777C13.125 14.755 14 14.007 14 13V4Zm-1 4.698V10c0 .374-.356.875-1.318 1.313C10.766 11.729 9.464 12 8 12s-2.766-.27-3.682-.687C3.356 10.875 3 10.373 3 10V8.698c.271.202.58.378.904.525C4.978 9.71 6.427 10 8 10s3.022-.289 4.096-.777A4.92 4.92 0 0 0 13 8.698Zm0 3V13c0 .374-.356.875-1.318 1.313C10.766 14.729 9.464 15 8 15s-2.766-.27-3.682-.687C3.356 13.875 3 13.373 3 13v-1.302c.271.202.58.378.904.525C4.978 12.71 6.427 13 8 13s3.022-.289 4.096-.777c.324-.147.633-.323.904-.525Z"/>
+  </svg>
+</h1>
+<form class="d-flex pb-2" role="search" action="{% url 'results' %}">
+  <input class="form-control me-2 shadow-sm" type="search" placeholder="{% trans 'Пошук' %}" name="search">
+  <button class="btn btn-outline-warning shadow-sm" type="submit">{% trans "Пошук" %}</button>
+</form>
+<div class="row">
+  <div class="col-md pb-2">
+    <a class="btn btn-warning shadow"  style="width: 100%" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+      {% trans "Фільтри" %}
+    </a>
+  </div>
+  <div class="col-md pb-2">
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit"  style="width: 100%" class="shadow btn btn-warning">{% trans "Експорт" %}</button>
+    </form>
+  </div>
+</div>
+<form role="search" action="{% url 'results' %}">
+  <div class="collapse pb-3" id="collapseExample">
+    <div class="card card-body">
+      <div class="row pb-2">
+        <div class="col-md-6">
+          {% trans "Тестування" %}
+          <select class="form-select shadow-sm" name="filter_exam" size="3">
+            {% for exam in exams %}
+            <option value="{{ exam.pk }}">{{ exam }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col">
+          {% trans "Статус" %}
+          <select class="form-select shadow-sm" name="filter_status" size="3">
+            <option value="active">{% trans "Активний" %}</option>
+            <option value="passed">{% trans "Успішно" %}</option>
+            <option value="not passed">{% trans "Не успішно" %}</option>
+          </select>
+        </div>
+        <div class="col-md-auto">
+          {% trans "Перескладений" %}
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="True" value="True" name="retake">
+            <label class="form-check-label" for="True">
+            {% trans "Так" %}
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="False" id="False" name="retake" checked>
+            <label class="form-check-label" for="True">
+              {% trans "Ні" %}
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="row pb-2">
+        <div class="col">
+          {% trans "Компанія" %}
+          <select class="form-select shadow-sm" name="company" size="3">
+            {% for company in companys %}
+            <option value="{{ company.0 }}">{{ company.0 }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col">
+          {% trans "Департамент" %}
+          <select class="form-select shadow-sm" name="department" size="3">
+            {% for department in departments %}
+            <option value="{{ department.0 }}">{{ department.0 }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <button class="btn btn-outline-warning shadow" style="width: 100%" type="submit">{% trans "Застосувати" %}</button>
+        </div>
+        <div class="col">
+          <a class="btn btn-outline-secondary shadow" href="{% url 'results' %}" style="width: 100%">{% trans "Скинути" %}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+{% if filter_exam %}
+<span class="badge rounded-pill bg-warning text-dark mb-2 shadow-sm">{% trans 'Тестування: ' %}{{ filter_exam }}</span>
+{% endif %}
+{% if filter_company %}
+<span class="badge rounded-pill bg-warning text-dark mb-2 shadow-sm">{% trans 'Підприємство: ' %}{{ filter_company }}</span>
+{% endif %}
+{% if filter_department %}
+<span class="badge rounded-pill bg-warning text-dark mb-2 shadow-sm">{% trans 'Департамент: ' %}{{ filter_department }}</span>
+{% endif %}
+{% if filter_status %}
+<span class="badge rounded-pill bg-warning text-dark mb-2 shadow-sm">{% trans 'Статус: ' %}{{ filter_status }}</span>
+{% endif %}
+{% if filter_retake and filter_retake|length == 1 %}
+  {% if filter_retake.0 == "True" %}
+  <span class="badge rounded-pill bg-warning text-dark mb-2 shadow-sm">{% trans 'Перескладенний: ' %}{% trans 'Так' %}</span>
+  {% else %}
+  <span class="badge rounded-pill bg-warning text-dark mb-2 shadow-sm">{% trans 'Перескладенний: ' %}{% trans 'Ні' %}</span>
+  {% endif %}
+{% endif %}
+<hr class="mt-0">
+{% for message in messages %}
+<div class="alert alert-{{ message.tags }} del-msg" role="alert">{{ message }}</div>
+{% endfor %}
+<div class="d-none d-md-block d-print-block">
+  <div class="row">
+    <div class="col-md-2 px-4">
+      {% trans 'Користувач' %}
+    </div>
+    <div class="col-md-2 px-4">
+      {% trans 'Тестування' %}
+    </div>
+    <div class="col-md-2">
+      {% trans 'Статус' %}
+    </div>
+    <div class="col-md-2 px-0">
+      {% trans 'Результат' %}
+    </div>
+    <div class="col-md-2 px-0">
+      {% trans 'Оцінка' %}
+    </div>
+    <div class="col-md-1 px-0">
+      {% trans 'Перескладений' %}
+    </div>
+  </div>
+</div>
+{% for user_exam in user_exams %}
+{% if user_exam.complete %}
+<a class="text-decoration-none text-dark" data-bs-toggle="modal" data-bs-target="#staticBackdrop{{ user_exam.pk }}">
+<div class="card shadow-sm my-3">
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-2 form-horizontal">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Користувач:' %}
+          </div>
+          <div class="col-auto">
+            {{ user_exam.username }}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Тестування:' %}
+          </div>
+          <div class="col-auto">
+            {{ user_exam.exam }}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Статус:' %}
+          </div>
+          <div class="col-auto">
+            <span class="badge text-bg-success">{% trans 'Завершений' %}</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Результат:' %}
+          </div>
+          <div class="col-auto">
+          {% if user_exam.status == 'passed' %}
+            <span class="badge text-bg-success">{% trans 'Успішно' %}</span>
+          {% elif user_exam.status == 'not passed' %}
+            <span class="badge text-bg-danger">{% trans 'Не успішно' %}</span>
+          {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Оцінка:' %}
+          </div>
+          <div class="col-auto">
+            {% if user_exam.score != None %}{{ user_exam.score }} ({{ user_exam.correct_answer }}/{{ user_exam.count_of_question }}) {% else %} -  {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-1">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Перездача:' %}
+          </div>
+          <div class="col-auto">
+            {% if user_exam.retake %}
+            <span class="badge text-bg-dark">{% trans "Так" %}</span>
+            {% else %}
+            <span class="badge text-bg-warning">{% trans "Ні" %}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</a>
+<div class="modal fade" id="staticBackdrop{{ user_exam.pk }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="staticBackdropLabel">{{ user_exam.username }} - {{ user_exam.exam }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>{% trans 'Користувач:' %} {{ user_exam.username }}</p>
+        <p>{% trans 'Тестування:' %} {{ user_exam.exam }} </p>
+        <p>{% trans 'Статус:' %} {% trans 'Завершений' %}</p>
+        <p>{% trans 'Результат:' %} {% if user_exam.status == 'passed' %}{% trans 'Успішно' %}{% elif user_exam.status == 'not passed' %}{% trans 'Не успішно' %}{% endif %}</p>
+        <p>{% trans 'Оцінка:' %} {% if user_exam.score != None %}{{ user_exam.score }} ({{ user_exam.correct_answer }}/{{ user_exam.count_of_question }}) {% else %} -  {% endif %}</p>
+        <p>{% trans 'Перездача' %}: {% if user_exam.retake %}{% trans "Так" %}{% else %}{% trans "Ні" %}{% endif %}</p>
+        <p>{% trans 'Початок' %}: {{ user_exam.start_time }}</p>
+        <p>{% trans 'Закінчення' %}: {{ user_exam.end_time }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary shadow" data-bs-dismiss="modal">{% trans 'Закрити' %}</button>
+        <button type="button" onclick="location.href='{% url 'admin:main_usersexam_change' object_id=user_exam.pk %}';" class="btn btn-outline-warning shadow">{% trans 'Детальніше' %}</button>
+        {% if user_exam.retake is False %}
+        <button type="button" onclick="location.href='{% url 'assignment_retake_exam' user_exam_pk=user_exam.pk %}';" class="btn btn-outline-warning shadow">{% trans 'Назначити перездачу' %}</button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% elif not user_exam.complete %}
+<a class="text-decoration-none text-dark" data-bs-toggle="modal" data-bs-target="#staticBackdrop2">
+<div class="card shadow-sm my-3">
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-2">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Користувач:' %}
+          </div>
+          <div class="col-auto">
+            {{ user_exam.username }}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Тестування:' %}
+          </div>
+          <div class="col-auto">
+            {{ user_exam.exam }}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Статус:' %}
+          </div>
+          <div class="col-auto">
+            <span class="badge text-bg-danger">{% trans 'Не завершений' %}</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Результат:' %}
+          </div>
+          <div class="col-auto">
+          {% if user_exam.status == 'active' %}
+            <span class="badge text-bg-warning">{% trans 'Активний' %}</span>
+          {% elif user_exam.status == 'not passed' %}
+            <span class="badge text-bg-danger">{% trans 'Не успішно' %}</span>
+          {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Оцінка:' %}
+          </div>
+          <div class="col-auto">
+            {% if user_exam.score != None %}{{ user_exam.score }} ({{ user_exam.correct_answer }}/{{ user_exam.count_of_question }}) {% else %} -  {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-1">
+        <div class="row">
+          <div class="col-6 d-md-none d-lg-block d-lg-none d-xl-block d-xl-none">
+            {% trans 'Перездача:' %}
+          </div>
+          <div class="col-auto">
+            {% if user_exam.retake %}{% trans "Так" %}{% else %}{% trans "Ні" %}{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</a>
+<div class="modal fade" id="staticBackdrop2" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel2" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="staticBackdropLabel2">{{ user_exam.username }} - {{ user_exam.exam }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>{% trans 'Користувач:' %} {{ user_exam.username }}</p>
+        <p>{% trans 'Тестування:' %} {{ user_exam.exam }} </p>
+        <p>{% trans 'Статус:' %} {% trans 'Завершений' %}</p>
+        <p>{% trans 'Результат:' %} {% if user_exam.status == 'passed' %}{% trans 'Успішно' %}{% elif user_exam.status == 'not passed' %}{% trans 'Не успішно' %}{% endif %}</p>
+        <p>{% trans 'Оцінка:' %} {% if user_exam.score != None %}{{ user_exam.score }} ({{ user_exam.correct_answer }}/{{ user_exam.count_of_question }}) {% else %} -  {% endif %}</p>
+        <p>{% trans 'Перездача' %}: {% if user_exam.retake %}{% trans "Так" %}{% else %}{% trans "Ні" %}{% endif %}</p>
+        <p>{% trans 'Початок' %}: {{ user_exam.start_time }}</p>
+        <p>{% trans 'Закінчення' %}: {{ user_exam.end_time }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary shadow" data-bs-dismiss="modal">{% trans 'Закрити' %}</button>
+        <button type="button" onclick="location.href='{% url 'admin:main_usersexam_change' object_id=user_exam.pk %}';" class="btn btn-outline-warning shadow">{% trans 'Детальніше' %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% empty %}
+<div class="text-center">
+  <p class="text-secondary">{% trans 'Список порожній...' %}</p>
+</div>
+{% endfor %}
+<div>
+  {% if user_exams.has_other_pages %}
+  <hr>
+  <nav aria-label="Page navigation example">
+  <ul class="pagination" style="--bs-pagination-color: black; --bs-pagination-hover-color: #ffc107; --bs-pagination-focus-color: #ffc107; --bs-pagination-focus-box-shadow: 0 0 0 0.25rem #ffc107">
+    {% if user_exams.has_previous %}
+    <li class="page-item"><a class="page-link"  href="?page={{ user_exams.previous_page_number }}">{% trans "Попередня" %}</a></li>
+    {% endif %}
+    {% for i in user_exams.paginator.page_range %}
+    {% if users_exams.number == i %}
+        <li class="page-item"><a class="page-link">{{ i }}</a></li>
+    {% else %}
+        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+    {% endif %}
+    {% endfor %}
+    {% if user_exams.has_next %}
+    <li class="page-item"><a class="page-link" href="?page={{ user_exams.next_page_number }}">{% trans "Насупна" %}</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+</div>
+{% endblock %}

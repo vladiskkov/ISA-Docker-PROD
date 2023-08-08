@@ -1,0 +1,423 @@
+{% extends "main/base_admin.html" %}
+{% load i18n%}
+{% block title %}{% trans "Статистика" %}{% endblock %}
+{% block content %}
+{% csrf_token %}
+<style>
+  .increase:hover{
+     transform: scale(1.005);
+}
+</style>
+  <div class="row">
+    <div class="col-md">
+      <h1 class="display-6">
+        {% trans "Статистика" %}
+      <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" class="bi bi-speedometer2" viewBox="0 0 16 16">
+        <path d="M8 4a.5.5 0 0 1 .5.5V6a.5.5 0 0 1-1 0V4.5A.5.5 0 0 1 8 4zM3.732 5.732a.5.5 0 0 1 .707 0l.915.914a.5.5 0 1 1-.708.708l-.914-.915a.5.5 0 0 1 0-.707zM2 10a.5.5 0 0 1 .5-.5h1.586a.5.5 0 0 1 0 1H2.5A.5.5 0 0 1 2 10zm9.5 0a.5.5 0 0 1 .5-.5h1.5a.5.5 0 0 1 0 1H12a.5.5 0 0 1-.5-.5zm.754-4.246a.389.389 0 0 0-.527-.02L7.547 9.31a.91.91 0 1 0 1.302 1.258l3.434-4.297a.389.389 0 0 0-.029-.518z"/>
+        <path fill-rule="evenodd" d="M0 10a8 8 0 1 1 15.547 2.661c-.442 1.253-1.845 1.602-2.932 1.25C11.309 13.488 9.475 13 8 13c-1.474 0-3.31.488-4.615.911-1.087.352-2.49.003-2.932-1.25A7.988 7.988 0 0 1 0 10zm8-7a7 7 0 0 0-6.603 9.329c.203.575.923.876 1.68.63C4.397 12.533 6.358 12 8 12s3.604.532 4.923.96c.757.245 1.477-.056 1.68-.631A7 7 0 0 0 8 3z"/>
+      </svg>
+        {% if main %}
+        | {% trans "Загальна" %}
+        {% else %}
+        | {{ exam }}
+        {% endif %}
+      </h1>
+    </div>
+    <div class="col-md-auto d-flex justify-content-center align-items-center">
+      <select class="form-select shadow increase" id="exam" name="exam" aria-label="Default select example">
+        <option selected>{% trans "Виберіть тестування" %}</option>
+        {% for exam in exams %}
+          <option value="{% url 'dashboards' pk=exam.pk %}">{{ exam }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% if not main %}
+    <div class="col-md-auto d-flex justify-content-center align-items-center my-2">
+      <a class="btn btn-warning shadow increase"  style="width: 100%" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+        {% trans "Фільтри" %}
+      </a>
+    </div>
+    {% endif %}
+  </div>
+<hr class="my-2">
+{% if main %}
+<p class="mb-0 text-muted fw-light fst-italic">*{% trans "Статистика вказана за пів року" %}</p>
+<div class="row mt-3">
+  <div class="col-md">
+    <div class="card mb-3 shadow-sm increase">
+      <div class="card-body">
+        <div class="d-flex justify-content-between p-md-1">
+          <div class="d-flex flex-row">
+            <div class="align-self-center mx-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" fill="currentColor" class="bi bi-journals" viewBox="0 0 16 16">
+                <path d="M5 0h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2 2 2 0 0 1-2 2H3a2 2 0 0 1-2-2h1a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1H1a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v9a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1H3a2 2 0 0 1 2-2z"/>
+                <path d="M1 6v-.5a.5.5 0 0 1 1 0V6h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 3v-.5a.5.5 0 0 1 1 0V9h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 2.5v.5H.5a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1H2v-.5a.5.5 0 0 0-1 0z"/>
+              </svg>
+            </div>
+            <div>
+              <h4>{% trans "Тестування" %}</h4>
+              <p class="mb-0">{% trans "Загальна кількість тестувань" %}</p>
+            </div>
+          </div>
+          <div class="align-self-center">
+            <h2 class="h1 mb-0">{{ exams_count }}</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="increase mb-3" id="chart_exams" style="width: 100%; height: 360px;"></div>
+  </div>
+  <div class="col-md">
+    <div class="card mb-3 shadow-sm increase">
+      <div class="card-body">
+        <div class="d-flex justify-content-between p-md-1">
+          <div class="d-flex flex-row">
+            <div class="align-self-center mx-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" fill="currentColor" class="bi bi-people" viewBox="0 0 16 16">
+                <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8Zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022ZM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816ZM4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0Zm3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/>
+              </svg>
+            </div>
+            <div>
+              <h4>{% trans "Користувачі" %}</h4>
+              <p class="mb-0">{% trans "Загальна кількість користувачів" %}</p>
+            </div>
+          </div>
+          <div class="align-self-center">
+            <h2 class="h1 mb-0">{{ users_count }}</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="chart_users" class="increase mb-3" style="width: 100%; height: 360px;"></div>
+  </div>
+</div>
+{% else %}
+<form role="search" action="{% url 'dashboards' pk=exam.pk %}">
+<div class="collapse pb-3" id="collapseExample">
+  <div class="card mt-3 card-body">
+    <div class="row pb-2">
+      <div class="col">
+        {% trans "Компанія" %}
+        <select class="form-select shadow-sm" name="company" size="3">
+          {% for company in companys %}
+          <option value="{{ company.0 }}">{{ company.0 }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col">
+        {% trans "Департамент" %}
+        <select class="form-select shadow-sm" name="department" size="3">
+          {% for department in departments %}
+          <option value="{{ department.0 }}">{{ department.0 }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <button class="btn btn-outline-warning shadow increase" style="width: 100%" type="submit">{% trans "Застосувати" %}</button>
+      </div>
+      <div class="col">
+        <a class="btn btn-outline-secondary shadow increase" href="{% url 'dashboards' pk=exam.pk %}" style="width: 100%">{% trans "Скинути" %}</a>
+      </div>
+    </div>
+  </div>
+</div>
+</form>
+{% if filter_company %}
+<span class="badge rounded-pill bg-warning text-dark mb-2 shadow-sm">{% trans 'Підприємство: ' %}{{ filter_company }}</span>
+{% endif %}
+{% if filter_department %}
+<span class="badge rounded-pill bg-warning text-dark mb-2 shadow-sm">{% trans 'Департамент: ' %}{{ filter_department }}</span>
+{% endif %}
+<div class="row mt-3">
+  <div class="col-md-6">
+    <div class="increase mb-3" id="chart_general" style="width: 100%; height: 460px;"></div>
+  </div>
+  <div class="col-md">
+    <div class="card mb-3 shadow-sm increase">
+      <div class="card-body">
+        <div class="d-flex justify-content-between p-md-1">
+          <div class="d-flex flex-row">
+            <div class="align-self-center mx-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" fill="currentColor" class="bi bi-people" viewBox="0 0 16 16">
+                <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8Zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022ZM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816ZM4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0Zm3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/>
+              </svg>
+            </div>
+            <div>
+              <h4>{% trans "Користувачі" %}</h4>
+              <p class="mb-0">{% trans "Загальна кількість користувачів" %}</p>
+            </div>
+          </div>
+          <div class="align-self-center">
+            <h2 class="h1 mb-0">{{ users_count }}</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card mb-3 shadow-sm increase">
+      <div class="card-body">
+        <div class="d-flex justify-content-between p-md-1">
+          <div class="d-flex flex-row">
+            <div class="align-self-center mx-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" fill="currentColor" class="bi bi-hourglass-split" viewBox="0 0 16 16">
+                <path d="M2.5 15a.5.5 0 1 1 0-1h1v-1a4.5 4.5 0 0 1 2.557-4.06c.29-.139.443-.377.443-.59v-.7c0-.213-.154-.451-.443-.59A4.5 4.5 0 0 1 3.5 3V2h-1a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-1v1a4.5 4.5 0 0 1-2.557 4.06c-.29.139-.443.377-.443.59v.7c0 .213.154.451.443.59A4.5 4.5 0 0 1 12.5 13v1h1a.5.5 0 0 1 0 1h-11zm2-13v1c0 .537.12 1.045.337 1.5h6.326c.216-.455.337-.963.337-1.5V2h-7zm3 6.35c0 .701-.478 1.236-1.011 1.492A3.5 3.5 0 0 0 4.5 13s.866-1.299 3-1.48V8.35zm1 0v3.17c2.134.181 3 1.48 3 1.48a3.5 3.5 0 0 0-1.989-3.158C8.978 9.586 8.5 9.052 8.5 8.351z"/>
+              </svg>
+            </div>
+            <div>
+              <h4>{% trans "Розпочали" %}</h4>
+              <p class="mb-0">{% trans "Кількість користувачів розпочавших" %}</p>
+            </div>
+          </div>
+          <div class="align-self-center">
+            <h2 class="h1 mb-0">{{ active_users_count }}</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card mb-3 shadow-sm increase">
+      <div class="card-body">
+        <div class="d-flex justify-content-between p-md-1">
+          <div class="d-flex flex-row">
+            <div class="align-self-center mx-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" fill="currentColor" class="bi bi-check2-all" viewBox="0 0 16 16">
+                <path d="M12.354 4.354a.5.5 0 0 0-.708-.708L5 10.293 1.854 7.146a.5.5 0 1 0-.708.708l3.5 3.5a.5.5 0 0 0 .708 0l7-7zm-4.208 7-.896-.897.707-.707.543.543 6.646-6.647a.5.5 0 0 1 .708.708l-7 7a.5.5 0 0 1-.708 0z"/>
+                <path d="m5.354 7.146.896.897-.707.707-.897-.896a.5.5 0 1 1 .708-.708z"/>
+              </svg>
+            </div>
+            <div>
+              <h4>{% trans "Завершили" %}</h4>
+              <p class="mb-0">{% trans "Кількість користувачів завершивших" %}</p>
+            </div>
+          </div>
+          <div class="align-self-center">
+            <h2 class="h1 mb-0">{{ complete_users_count }}</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card mb-3 shadow-sm increase">
+      <div class="card-body">
+        <div class="d-flex justify-content-between p-md-1">
+          <div class="d-flex flex-row">
+            <div class="align-self-center mx-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
+              </svg>
+            </div>
+            <div>
+              <h4>{% trans "Не розпочали" %}</h4>
+              <p class="mb-0">{% trans "Кількість користувачів не розпочавших" %}</p>
+            </div>
+          </div>
+          <div class="align-self-center">
+            <h2 class="h1 mb-0">{{ not_start_users_count }}</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row my-2">
+  <div class="col-md-6">
+    <div class="card mb-3 shadow-sm increase">
+      <div class="card-body">
+        <div class="d-flex justify-content-between p-md-1">
+          <div class="d-flex flex-row">
+            <div class="align-self-center mx-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" fill="currentColor" class="bi bi-check2-all" viewBox="0 0 16 16">
+                <path d="M12.354 4.354a.5.5 0 0 0-.708-.708L5 10.293 1.854 7.146a.5.5 0 1 0-.708.708l3.5 3.5a.5.5 0 0 0 .708 0l7-7zm-4.208 7-.896-.897.707-.707.543.543 6.646-6.647a.5.5 0 0 1 .708.708l-7 7a.5.5 0 0 1-.708 0z"/>
+                <path d="m5.354 7.146.896.897-.707.707-.897-.896a.5.5 0 1 1 .708-.708z"/>
+              </svg>
+            </div>
+            <div>
+              <h4>{% trans "Успішно склали" %}</h4>
+              <p class="mb-0">{% trans "Успішно завершили" %}</p>
+            </div>
+          </div>
+          <div class="align-self-center">
+            <h2 class="h1 mb-0">{{ success_count }}</h2>
+          </div>
+        </div>
+        <div class="progress">
+          <div
+            class="progress-bar bg-success"
+            role="progressbar"
+            style="width: {{ success_percent }}%"
+            aria-valuenow="{{ success_percent }}"
+            aria-valuemin="0"
+            aria-valuemax="100">{{ success_percent }}%
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card mb-3 shadow-sm increase">
+      <div class="card-body">
+        <div class="d-flex justify-content-between p-md-1">
+          <div class="d-flex flex-row">
+            <div class="align-self-center mx-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" fill="currentColor" class="bi bi-check2-all" viewBox="0 0 16 16">
+                <path d="M12.354 4.354a.5.5 0 0 0-.708-.708L5 10.293 1.854 7.146a.5.5 0 1 0-.708.708l3.5 3.5a.5.5 0 0 0 .708 0l7-7zm-4.208 7-.896-.897.707-.707.543.543 6.646-6.647a.5.5 0 0 1 .708.708l-7 7a.5.5 0 0 1-.708 0z"/>
+                <path d="m5.354 7.146.896.897-.707.707-.897-.896a.5.5 0 1 1 .708-.708z"/>
+              </svg>
+            </div>
+            <div>
+              <h4>{% trans "Не успішно склали" %}</h4>
+              <p class="mb-0">{% trans "Не успішно завершили" %}</p>
+            </div>
+          </div>
+          <div class="align-self-center">
+            <h2 class="h1 mb-0">{{ not_success_count }}</h2>
+          </div>
+        </div>
+        <div class="progress">
+          <div
+            class="progress-bar bg-danger"
+            role="progressbar"
+            style="width: {{ not_success_percent }}%"
+            aria-valuenow="{{ not_success_percent }}"
+            aria-valuemin="0"
+            aria-valuemax="100">{{ not_success_percent }}%
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div>
+  <div class="card mb-3 shadow-sm increase" style="height: 95%">
+    <div class="card-body">
+      <div class="d-flex justify-content-between p-md-1">
+        <div class="d-flex flex-row">
+          <div>
+            <div class="row">
+              <div class="col">
+                <h4>{% trans "Некоректні відповіді" %}</h4>
+              </div>
+              <div class="col justify-content-end">
+                <form method="post">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-outline-warning float-end">{% trans 'Експорт' %}</button>
+                </form>
+              </div>
+            </div>
+            <div class="overflow-auto" style="max-height: 150px;">
+              {% for question, count in wrong_questions %}
+              <p>{{ forloop.counter }}: {{ question.question }}: {{ count }}</p>
+              {% empty %}
+              <div class="text-center">
+                <p class="text-secondary">{% trans 'Список порожній...' %}</p>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+  {% if dashboard_company_records %}
+    <div id="chartCompanys" class="increase my-2" style="width: 100%; height: 360px;"></div>
+  {% endif %}
+{% endif %}
+<script>
+  window.onload = function () {
+    var chart = new CanvasJS.Chart("chart_general",{
+      theme: "light2",
+      animationEnabled: true,
+      exportEnabled: true,
+      title: {
+        text: "{% trans 'Загальна' %}",
+        dockInsidePlotArea: true,
+        verticalAlign: "center",
+        maxWidth: 140,
+        fontSize: 22
+      },
+      data: [{
+        type: "doughnut",
+        indexLabel: "{label} - {y}",
+        yValueFormatString: "#,##0.0\"%\"",
+        startAngle: 90,
+        dataPoints: [
+                {"label": "{% trans 'Завершили' %}", "y": {{ complete_users_percent }} },
+                {"label": "{% trans 'Активно' %}", "y": {{active_users_percent}} },
+                {"label": "{% trans 'Не розпочинал' %}", "y": {{ not_start_users_percent}} }
+                ]
+      }]
+    });
+    var chart_companys = new CanvasJS.Chart("chartCompanys", {
+      theme: "light2",
+      animationEnabled: true,
+      exportEnabled: true,
+      title:{
+        text:"{% trans 'Статистика по компаніям' %}",
+        fontSize: 22
+      },
+      axisY2: [{
+        suffix: " {% trans 'Користувачів' %}",
+        labelAngle: 0,
+        labelMaxWidth: 150,
+        lineThickness: 1
+      }],
+      axisX: {
+        reversed: true
+      },
+      data: [{
+       type: "column",
+       yValueFormatString: "{% trans 'Користувачів' %}",
+       axisYType: "secondary",
+       dataPoints: {{ dashboard_company_records|safe }}
+     }]
+    });
+    chart_companys.render();
+    chart.render();
+  }
+</script>
+<script>
+    document.getElementById("exam").onchange = function() {
+        if (this.selectedIndex!==0) {
+            window.location.href = this.value;
+        }
+    };
+</script>
+<script>
+window.onload = function () {
+  var chart_users = new CanvasJS.Chart("chart_users", {
+    theme: "light2",
+    animationEnabled: true,
+    axisY: {
+      title: "{% trans 'Кількість користувачів' %}",
+    },
+    data: [{
+      type: "line",
+      lineColor: "#ffc107",
+      yValueFormatString: "#,### {% trans 'Користувач' %}",
+      dataPoints: {{ users_trend|safe }}
+    }]
+  });
+  var chart_exams = new CanvasJS.Chart("chart_exams", {
+    theme: "light2",
+    animationEnabled: true,
+    exportEnabled: true,
+    axisY2: [{
+      suffix: " Users",
+      labelAngle: 0,
+      labelMaxWidth: 150,
+      lineThickness: 1
+    }],
+    axisX: {
+      reversed: true
+      },
+    data: [{
+      type: "column",
+      yValueFormatString: "#.00 Users",
+      axisYType: "secondary",
+      dataPoints: {{ exams_trend|safe }}
+      }]
+    });
+  chart_users.render();
+  chart_exams.render();
+}
+</script>
+{% endblock %}
